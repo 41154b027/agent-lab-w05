@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NDHU Campus Agent Lab · 專案成果總結簡報</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-card: #1f293d;
+      --surface-hover: #28354f;
+      --border: #374151;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --primary: #3b82f6;
+      --primary-light: #60a5fa;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-purple: #8b5cf6;
+      --accent-rose: #f43f5e;
+      --font-heading: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* Top progress bar */
+    .progress-bar-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1000;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent-purple), var(--accent-green));
+      width: 10%;
+      transition: width 0.3s ease;
+    }
+
+    /* Slide Deck Layout */
+    .slide-deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    @media (min-width: 1024px) {
+      .slide-deck {
+        max-width: calc(100vh * 16 / 9);
+        max-height: calc(100vw * 9 / 16);
+        margin: auto;
+        position: absolute;
+        inset: 0;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      }
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 50px 70px 80px 70px;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.97) translateY(10px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      background: radial-gradient(circle at top right, #1e293b 0%, var(--bg) 70%);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+    }
+
+    /* Header & Tag */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: var(--primary-light);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      width: fit-content;
+    }
+
+    .badge.green {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    .badge.amber {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: #fbbf24;
+    }
+
+    .badge.purple {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: rgba(139, 92, 246, 0.3);
+      color: #c084fc;
+    }
+
+    .badge.rose {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: #fb7185;
+    }
+
+    h1.slide-title {
+      font-size: clamp(2rem, 3.8vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.slide-subtitle {
+      font-size: clamp(1rem, 1.6vw, 1.25rem);
+      color: var(--text-muted);
+      line-height: 1.5;
+      max-width: 900px;
+      margin-bottom: 28px;
+    }
+
+    /* Content Cards Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      width: 100%;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    .card {
+      background: rgba(31, 41, 61, 0.65);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .card:hover {
+      border-color: rgba(59, 130, 246, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-desc {
+      font-size: 0.92rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .card-tag {
+      font-size: 0.78rem;
+      font-family: monospace;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: #94a3b8;
+      width: fit-content;
+      margin-top: auto;
+    }
+
+    /* Stat / Highlight Box */
+    .stat-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.05));
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .stat-number {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--primary-light);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      line-height: 1.4;
+    }
+
+    /* Timeline List */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      background: rgba(31, 41, 61, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      gap: 16px;
+    }
+
+    .timeline-pill {
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--primary);
+      color: white;
+      white-space: nowrap;
+    }
+
+    .timeline-content {
+      flex: 1;
+    }
+    .timeline-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: white;
+    }
+    .timeline-sub {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    /* Comparison Table */
+    .table-container {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: rgba(31, 41, 61, 0.4);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: rgba(15, 23, 42, 0.8);
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td.highlight {
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    /* Bottom Navigation Controls */
+    .nav-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      padding: 8px 18px;
+      border-radius: 9999px;
+      z-index: 1000;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--primary);
+    }
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .slide-counter {
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .shortcut-hint {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      font-size: 0.78rem;
+      color: #64748b;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #cbd5e1;
+    }
+
+    /* Cover Special Styling */
+    .slide.cover {
+      text-align: center;
+      align-items: center;
+    }
+    .cover-title {
+      font-size: clamp(2.4rem, 5vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #ffffff 20%, #60a5fa 60%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .cover-desc {
+      font-size: 1.25rem;
+      color: #94a3b8;
+      max-width: 760px;
+      margin-bottom: 36px;
+      line-height: 1.6;
+    }
+    .meta-pills {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .meta-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 768px) {
+      .slide { padding: 30px 24px 80px 24px; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .shortcut-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Slide Deck -->
+  <div class="slide-deck" id="slideDeck">
+
+    <!-- SLIDE 1: COVER -->
+    <section class="slide cover active" data-index="1">
+      <div class="badge purple">國立東華大學 · NDHU Campus Agent Lab</div>
+      <h1 class="cover-title">AI Agent 校園實作成果總結</h1>
+      <p class="cover-desc">從命令列到單頁應用，從檔案整理到安全審查：掌握 AI Agent 核心能力與 Human-in-the-Loop 監督原則</p>
+      <div class="meta-pills">
+        <span class="meta-pill">👤 學生代碼：W05 (41154b027)</span>
+        <span class="meta-pill">🛠️ 工具：Antigravity (Google DeepMind)</span>
+        <span class="meta-pill">📦 任務範疇：A + B(v1/v2) + C + D 大滿貫</span>
+        <span class="meta-pill">🚀 Git 歷程：規範化分支推播</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: THE CORE MISSION & PHILOSOPHY -->
+    <section class="slide" data-index="2">
+      <div class="badge">核心教育目標 · Philosophy</div>
+      <h1 class="slide-title">這份 Repo 到底在做什麼？</h1>
+      <p class="slide-subtitle">訓練學生不再是「被動等待 AI 答案」，而是成為掌握工作邊界與品質把關的「AI 監督者（Supervisor）」</p>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">🎯 1. 邊界控制 (Scope Control)</div>
+          <p class="card-desc">給予 AI 明確的輸入與輸出目錄。不允許越界存取電腦系統、不私自聯網、不允許擴大權限。</p>
+          <span class="card-tag">只看不動 ➡️ 確認再執行</span>
+        </div>
+        <div class="card">
+          <div class="card-title">🛡️ 2. 非破壞性原則 (Safety First)</div>
+          <p class="card-desc">面對同名或疑似重複檔案時，原檔 100% 唯讀保留；副本各自歸檔，絕不執行不可逆的刪除或盲目覆蓋。</p>
+          <span class="card-tag">不以 final2 認定定稿</span>
+        </div>
+        <div class="card">
+          <div class="card-title">🔍 3. 人為驗收 (Human in the Loop)</div>
+          <p class="card-desc">AI 宣稱完成不代表正確！親自透過邊界極端值（如無符合條件測試）與功能修改驗證真實能力。</p>
+          <span class="card-tag">至少改一次 ＆ 退回不合格</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: TASK ARCHITECTURE -->
+    <section class="slide" data-index="3">
+      <div class="badge green">架構全覽 · Architecture</div>
+      <h1 class="slide-title">完整實作的四大模組歷程</h1>
+      <p class="slide-subtitle">透過漸進式的校園日常情境，完整鍛鍊資料整理、前端開發、資料清理與資安審核能力</p>
+      <div class="grid-4">
+        <div class="card">
+          <div class="badge green" style="margin-bottom:4px;">Task A</div>
+          <div class="card-title">📁 社團檔案整理</div>
+          <p class="card-desc">盤點 12 份雜亂文字檔，分類複製至 4 大類別，產出清單與重複分析報告。</p>
+          <span class="card-tag">practice/01-club-files</span>
+        </div>
+        <div class="card">
+          <div class="badge" style="margin-bottom:4px;">Task B (v1 & v2)</div>
+          <div class="card-title">🌐 課間活動挑選器</div>
+          <p class="card-desc">純離線單頁應用（SPA），三條件過濾抽選、最近紀錄、中英雙語，並升級即時計數與快捷鍵。</p>
+          <span class="card-tag">practice/02-campus-picker</span>
+        </div>
+        <div class="card">
+          <div class="badge amber" style="margin-bottom:4px;">Task C (進階)</div>
+          <div class="card-title">📊 器材記錄清理</div>
+          <p class="card-desc">清理髒資料，去除空格、過濾全空列、狀態標準化、異常數值原樣保留不瞎猜。</p>
+          <span class="card-tag">practice/03-equipment</span>
+        </div>
+        <div class="card">
+          <div class="badge rose" style="margin-bottom:4px;">Task D</div>
+          <div class="card-title">🛑 惡意計畫退回</div>
+          <p class="card-desc">審查刻意寫錯的 bad-plan，找出 5 大致命資安與幻覺問題，提出合規替代方案。</p>
+          <span class="card-tag">practice/04-review</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: TASK A DETAIL -->
+    <section class="slide" data-index="4">
+      <div class="badge green">Task A · 檔案整理</div>
+      <h1 class="slide-title">Task A：安全無損的檔案盤點與分類</h1>
+      <p class="slide-subtitle">嚴格遵守兩階段執行流程：第一階段提出計畫確認，第二階段只寫入 output</p>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🔍 雜湊比對與智慧版本保留</div>
+          <p class="card-desc">
+            • <b>SHA-256 精確比對</b>：識別出 <code>announcement</code> 與 <code>equipment</code> 兩組完全相同檔案，各存副本不刪除。<br><br>
+            • <b>拒絕檔名偏見</b>：<code>proposal_final.txt</code>（室外 30 分鐘）與 <code>proposal_final2.txt</code>（室內 20 分鐘）內容截然不同，兩者皆視為提案草案完整保留。
+          </p>
+          <span class="card-tag">SHA-256 Hash Matching</span>
+        </div>
+        <div class="card">
+          <div class="card-title">📂 分類與自動化清單交付</div>
+          <p class="card-desc">
+            • <b>四大清晰分類</b>：<code>proposals/</code>（企劃與預算）、<code>meetings/</code>（會議追蹤）、<code>publicity/</code>（宣傳通知）、<code>equipment/</code>（物資盤點）。<br><br>
+            • <b>結構化審計清單</b>：產生 <code>manifest.json</code>（12 筆來源、去向、理由）與 <code>report.md</code> 完整整理報告。
+          </p>
+          <span class="card-tag">Output: manifest.json & report.md</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: TASK B DETAIL -->
+    <section class="slide" data-index="5">
+      <div class="badge">Task B · 單頁工具</div>
+      <h1 class="slide-title">Task B：零依賴課間活動挑選器 (v1 ➡️ v2)</h1>
+      <p class="slide-subtitle">純離線單一檔案 HTML+CSS+JS 架構，不依賴 CDN、套件或網路請求，雙擊即可使用</p>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">🎯 精確多維篩選</div>
+          <p class="card-desc">同時滿足地點（室內/室外/不限）、時間（&le;15/30/60分）、強度（低/中/不限）。無符合活動時嚴格顯示警語，絕不放寬條件。</p>
+          <span class="card-tag">Strict Multi-filter</span>
+        </div>
+        <div class="card">
+          <div class="card-title">🔄 雙語與狀態維持</div>
+          <p class="card-desc">一鍵在中英雙語介面即時切換（標籤、按鈕、活動名全切換）。保留最近 5 次成功抽選紀錄；支援重設篩選但不抹除歷史。</p>
+          <span class="card-tag">i18n & History State</span>
+        </div>
+        <div class="card" style="border-color: rgba(59, 130, 246, 0.6); background: rgba(59, 130, 246, 0.1);">
+          <div class="card-title">⚡ B v2 改版亮點</div>
+          <p class="card-desc">
+            <b>1. 即時符合筆數提示</b>：下拉選單變更時即時動態計算符合項目數（如 4 筆、0 筆）。<br>
+            <b>2. 鍵盤 Enter 快捷支援</b>：按 Enter 直接快速挑選。
+          </p>
+          <span class="card-tag">B v2: UX Enhancement</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: TASK C DETAIL -->
+    <section class="slide" data-index="6">
+      <div class="badge amber">Task C · 資料清理</div>
+      <h1 class="slide-title">Task C：社團器材記錄的規範化清洗</h1>
+      <p class="slide-subtitle">模擬資料清理實戰：不依賴 Excel 也能高精度標準化與稽核異常值</p>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">🧹 資料標準化規則 (Normalized)</div>
+          <p class="card-desc">
+            • <b>全空列過濾</b>：10 筆原始列中，僅移除完全空白的第 6 列 <code>{}</code>，保留 9 筆有效列。<br>
+            • <b>去空白</b>：文字欄位（<code>item_id</code>, <code>name</code>）前後空格清除；數量保留原值。<br>
+            • <b>狀態歸一</b>：可借/可出借 ➡️ <code>available</code>；借出 ➡️ <code>borrowed</code>；待盤點 ➡️ <code>unknown</code>。
+          </p>
+          <span class="card-tag">output/normalized.json (9 records)</span>
+        </div>
+        <div class="card">
+          <div class="card-title">⚠️ 忠實報告異常，不臆測數據</div>
+          <p class="card-desc">
+            • <b>重複 ID 不合併</b>：<code>EQ01</code>（兩筆白板筆）、<code>EQ02</code>（數量 2 vs 3 衝突）皆完整保留列入報告。<br>
+            • <b>異常數值不竄改</b>：第 7 列 <code>qty: ""</code>（空白）與第 8 列 <code>qty: -1</code>（負數）原樣保留，不補零不取絕對值！
+          </p>
+          <span class="card-tag">output/issues.md</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: TASK D DETAIL -->
+    <section class="slide" data-index="7">
+      <div class="badge rose">Task D · 資安與審查</div>
+      <h1 class="slide-title">Task D：阻斷惡意/瑕疵計畫（Rejection）</h1>
+      <p class="slide-subtitle">面對 AI 提出「整理 Downloads、刪重複、final2定稿、猜數值、自動公開」的致命計畫，予以全盤退回</p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>惡意/高風險計畫 (bad-plan.txt)</th>
+              <th>背後潛在危害 (Risk Analysis)</th>
+              <th>可接受的替代做法 (Allowed Alternative)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="highlight">「整理整台電腦 Downloads」</td>
+              <td>越界存取非授權目錄，恐外洩私人機密</td>
+              <td>嚴格限縮在指定練習資料夾，不碰觸上層</td>
+            </tr>
+            <tr>
+              <td class="highlight">「刪除重複檔案」</td>
+              <td>不可逆破壞性操作，誤刪同名重要備份</td>
+              <td>原檔不刪，相同檔案各自在 output 保留副本</td>
+            </tr>
+            <tr>
+              <td class="highlight">「把 final2 當作最新版」</td>
+              <td>檔名非定稿保證，可能遺失不同備案</td>
+              <td>所有相近版本全部留存，交由人工會議決定</td>
+            </tr>
+            <tr>
+              <td class="highlight">「找不到資料就補合理值」</td>
+              <td>AI 幻覺與竄改偽造數據，破壞真實性</td>
+              <td>缺失值標記 <code>missing</code> 並記錄報告，不瞎猜</td>
+            </tr>
+            <tr>
+              <td class="highlight">「完成後自動將成果公開」</td>
+              <td>未經人工審查直接發布，造成資安洩漏</td>
+              <td>僅存於本地 output 資料夾，不自動聯網公開</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: GIT LOG & TRAJECTORY -->
+    <section class="slide" data-index="8">
+      <div class="badge green">Git 工作流 · Trajectory</div>
+      <h1 class="slide-title">規範化 Commit 歷史與可追溯性</h1>
+      <p class="slide-subtitle">遵循業界標準化提交規範，每個任務獨立驗收，依序推播至遠端 GitHub 倉庫</p>
+      <div class="timeline">
+        <div class="timeline-item">
+          <span class="timeline-pill">Record</span>
+          <div class="timeline-content">
+            <div class="timeline-title">record: learning record and screenshots</div>
+            <div class="timeline-sub">完成學習紀錄填寫與實作證據存檔 (submission-template.md & evidence/)</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span class="timeline-pill" style="background:var(--accent-rose);">Task D</span>
+          <div class="timeline-content">
+            <div class="timeline-title">D: rejection</div>
+            <div class="timeline-sub">完成不良計畫審查並撰寫退回原因 (my-rejection.md)</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span class="timeline-pill" style="background:var(--accent-amber);">Task C</span>
+          <div class="timeline-content">
+            <div class="timeline-title">C: clean equipment records</div>
+            <div class="timeline-sub">器材資料去空、狀態標準化與異常報告 (normalized.json & issues.md)</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span class="timeline-pill" style="background:var(--accent-purple);">Task B2</span>
+          <div class="timeline-content">
+            <div class="timeline-title">B v2: add match count indicator and keyboard shortcut</div>
+            <div class="timeline-sub">依據新需求改版挑選器，加入動態符合統計與鍵盤 Enter 快捷</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span class="timeline-pill" style="background:var(--primary);">Task B1</span>
+          <div class="timeline-content">
+            <div class="timeline-title">B v1: activity picker</div>
+            <div class="timeline-sub">產出單頁離線課間活動挑選器初版 (output/index.html)</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span class="timeline-pill" style="background:var(--accent-green);">Task A</span>
+          <div class="timeline-content">
+            <div class="timeline-title">A: organize club files</div>
+            <div class="timeline-sub">完成 12 個社團檔案安全分類複製與清單報告產出</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: SUMMARY & TAKEAWAYS -->
+    <section class="slide" data-index="9">
+      <div class="badge purple">總結與收穫 · Key Takeaways</div>
+      <h1 class="slide-title">實作收穫：成為 AI Agent 的優秀駕馭者</h1>
+      <p class="slide-subtitle">AI Agent 是強大的倍增器，但人類的批判性思維與審查機制才是確保品質與安全的終極防線</p>
+      <div class="grid-3">
+        <div class="stat-box">
+          <div class="stat-number">100%</div>
+          <div class="stat-label"><b>原檔無損率</b><br>所有原始輸入檔 12 個無一被刪除或損壞，實現最高安全等級。</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">4 / 4</div>
+          <div class="stat-label"><b>完整模組涵蓋</b><br>全數完成 A（整理）、B（網頁）、C（清理）、D（審查）全系列任務。</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">Zero</div>
+          <div class="stat-label"><b>零外部相依</b><br>前端成果與資料檔案完全離線可攜，雙擊即開，兼顧效能與安全性。</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Bottom Navigation Controls -->
+  <nav class="nav-bar">
+    <button class="nav-btn" id="prevBtn" onclick="prevSlide()" title="上一頁 (←)">&#8592;</button>
+    <div class="slide-counter" id="slideCounter">1 / 9</div>
+    <button class="nav-btn" id="nextBtn" onclick="nextSlide()" title="下一頁 (→)">&#8594;</button>
+  </nav>
+
+  <!-- Keyboard Shortcuts Hint -->
+  <div class="shortcut-hint">
+    <span>切換投影片：<kbd>&#8592;</kbd> <kbd>&#8594;</kbd> 或 <kbd>Space</kbd></span>
+    <span>全螢幕：<kbd>F</kbd></span>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    const progressBar = document.getElementById('progressBar');
+    const slideCounter = document.getElementById('slideCounter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function updateSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      currentSlide = index;
+
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === currentSlide);
+      });
+
+      // Update progress bar & counter
+      const progressPercent = ((currentSlide + 1) / totalSlides) * 100;
+      progressBar.style.width = progressPercent + '%';
+      slideCounter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+
+      // Update button states
+      prevBtn.disabled = currentSlide === 0;
+      nextBtn.disabled = currentSlide === totalSlides - 1;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        updateSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        updateSlide(currentSlide - 1);
+      }
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.code === 'Space') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      }
+    });
+
+    // Touch gesture support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    window.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+    window.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchEndX < touchStartX - 50) nextSlide();
+      if (touchEndX > touchStartX + 50) prevSlide();
+    }, false);
+
+    // Initial setup
+    updateSlide(0);
+  </script>
+</body>
+</html>
