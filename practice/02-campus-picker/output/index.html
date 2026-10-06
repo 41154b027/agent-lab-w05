@@ -125,6 +125,28 @@
       border-color: var(--primary);
     }
 
+    /* v2: Match count badge */
+    .match-count-badge {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+    .match-count-badge .count-highlight {
+      font-weight: 700;
+      color: var(--primary);
+      background-color: #eff6ff;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+    }
+
     .btn-row {
       display: grid;
       grid-template-columns: 2fr 1fr;
@@ -157,6 +179,14 @@
     }
     .btn-secondary:hover {
       background-color: #e2e8f0;
+    }
+
+    /* v2: Keyboard shortcut tip */
+    .shortcut-tip {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 0.6rem;
     }
 
     /* Result Section */
@@ -317,7 +347,7 @@
       <section class="card">
         <div class="form-group">
           <label id="lblLocation" for="locationSelect">活動地點</label>
-          <select id="locationSelect">
+          <select id="locationSelect" onchange="updateMatchCount()">
             <option value="all">不限</option>
             <option value="indoor">室內</option>
             <option value="outdoor">室外</option>
@@ -326,7 +356,7 @@
 
         <div class="form-group">
           <label id="lblMinutes" for="minutesSelect">可用時間</label>
-          <select id="minutesSelect">
+          <select id="minutesSelect" onchange="updateMatchCount()">
             <option value="15">15 分鐘</option>
             <option value="30" selected>30 分鐘</option>
             <option value="60">60 分鐘</option>
@@ -335,17 +365,24 @@
 
         <div class="form-group">
           <label id="lblEnergy" for="energySelect">活動強度</label>
-          <select id="energySelect">
+          <select id="energySelect" onchange="updateMatchCount()">
             <option value="all">不限</option>
             <option value="low">低強度</option>
             <option value="medium">中強度</option>
           </select>
         </div>
 
+        <!-- v2: Real-time match count badge -->
+        <div class="match-count-badge" id="matchCountBox">
+          <span id="matchCountLabel">符合條件的活動</span>
+          <span class="count-highlight" id="matchCountVal">-- 筆</span>
+        </div>
+
         <div class="btn-row">
           <button id="pickBtn" class="btn-primary" onclick="pickActivity()">幫我選</button>
           <button id="resetBtn" class="btn-secondary" onclick="resetFilters()">重設篩選</button>
         </div>
+        <div class="shortcut-tip" id="shortcutTip">💡 提示：按鍵盤 Enter 鍵亦可快速挑選</div>
       </section>
 
       <!-- Result Card -->
@@ -498,7 +535,10 @@
         indoorTag: "室內",
         outdoorTag: "室外",
         lowTag: "低強度",
-        mediumTag: "中強度"
+        mediumTag: "中強度",
+        matchCountLabel: "符合條件的活動",
+        matchUnit: "筆",
+        shortcutTip: "💡 提示：按鍵盤 Enter 鍵亦可快速挑選"
       },
       en: {
         pageTitle: "Campus Activity Picker",
@@ -527,13 +567,36 @@
         indoorTag: "Indoor",
         outdoorTag: "Outdoor",
         lowTag: "Low Energy",
-        mediumTag: "Medium Energy"
+        mediumTag: "Medium Energy",
+        matchCountLabel: "Matching activities",
+        matchUnit: "items",
+        shortcutTip: "💡 Tip: Press Enter to quickly pick an activity"
       }
     };
 
     let currentLang = 'zh';
     let currentResult = null; // store last activity or null or 'none'
     let history = []; // stores up to 5 activity objects
+
+    function getFilteredActivities() {
+      const selectedLocation = document.getElementById('locationSelect').value;
+      const selectedMinutes = parseInt(document.getElementById('minutesSelect').value, 10);
+      const selectedEnergy = document.getElementById('energySelect').value;
+
+      return activities.filter(act => {
+        const matchLocation = selectedLocation === 'all' || act.location_type === selectedLocation;
+        const matchMinutes = act.minutes <= selectedMinutes;
+        const matchEnergy = selectedEnergy === 'all' || act.energy === selectedEnergy;
+        return matchLocation && matchMinutes && matchEnergy;
+      });
+    }
+
+    function updateMatchCount() {
+      const matches = getFilteredActivities();
+      const t = i18n[currentLang];
+      document.getElementById('matchCountLabel').textContent = t.matchCountLabel;
+      document.getElementById('matchCountVal').textContent = `${matches.length} ${t.matchUnit}`;
+    }
 
     function updateLanguageUI() {
       const t = i18n[currentLang];
@@ -561,6 +624,10 @@
       document.getElementById('resetBtn').textContent = t.resetBtn;
       document.getElementById('historyTitle').textContent = t.historyTitle;
       document.getElementById('clearHistoryBtn').textContent = t.clearHistoryBtn;
+      document.getElementById('shortcutTip').textContent = t.shortcutTip;
+
+      // Update match count badge
+      updateMatchCount();
 
       // Update current result display
       if (currentResult === null) {
@@ -581,17 +648,7 @@
     }
 
     function pickActivity() {
-      const selectedLocation = document.getElementById('locationSelect').value;
-      const selectedMinutes = parseInt(document.getElementById('minutesSelect').value, 10);
-      const selectedEnergy = document.getElementById('energySelect').value;
-
-      // Filter activities based strictly on criteria
-      const filtered = activities.filter(act => {
-        const matchLocation = selectedLocation === 'all' || act.location_type === selectedLocation;
-        const matchMinutes = act.minutes <= selectedMinutes;
-        const matchEnergy = selectedEnergy === 'all' || act.energy === selectedEnergy;
-        return matchLocation && matchMinutes && matchEnergy;
-      });
+      const filtered = getFilteredActivities();
 
       if (filtered.length === 0) {
         currentResult = 'none';
@@ -665,6 +722,7 @@
       document.getElementById('locationSelect').value = 'all';
       document.getElementById('minutesSelect').value = '30';
       document.getElementById('energySelect').value = 'all';
+      updateMatchCount();
       // Does not clear history, does not touch result
     }
 
@@ -672,6 +730,16 @@
       history = [];
       renderHistory();
     }
+
+    // Keyboard support: Press Enter to pick activity
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        pickActivity();
+      }
+    });
+
+    // Initialize match count on load
+    updateMatchCount();
   </script>
 </body>
 </html>
